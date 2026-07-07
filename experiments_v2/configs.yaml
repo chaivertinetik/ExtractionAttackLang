@@ -1,0 +1,45 @@
+# Model families and per-language member / non-member sources.
+#
+# member    = data the target model plausibly trained on (attack target).
+# nonmember = a TEMPORAL / held-out control the model did NOT see. This is the
+#             single most important thing v1 was missing. For continued-pretrain
+#             specialists use recent crawl shards (post-cutoff) as nonmembers.
+#
+# NOTE: verify membership claims before publishing. For Poro-2, confirm which
+# Finnish corpus was actually used in continued pretraining (LumiOpen docs);
+# for InkubaLM confirm the Inkuba-Mono splits. State these provenance facts in
+# the paper's data section.
+
+model_families:
+  # clean same-tokenizer natural experiment (specialist vs its base)
+  poro_finnish:
+    target: LumiOpen/Llama-Poro-2-8B-base
+    base:   meta-llama/Llama-3.1-8B          # reference == base => PPL ratio valid
+  # reference-free arm (different tokenizer -> use MIA suite, not ratio)
+  inkuba_african:
+    target: lelapa/InkubaLM-0.4B
+    base:   null
+  # scaling suite (same family, many sizes) for the log-linear curve
+  pythia_suite:
+    sizes: [EleutherAI/pythia-160m, EleutherAI/pythia-410m, EleutherAI/pythia-1.4b,
+            EleutherAI/pythia-2.8b, EleutherAI/pythia-6.9b, EleutherAI/pythia-12b]
+  olmo_suite:
+    sizes: [allenai/OLMo-2-0425-1B, allenai/OLMo-2-1124-7B]
+
+languages:
+  finnish:
+    member:    {hf: HuggingFaceFW/fineweb-2, config: fin_Latn, split: train, text_field: text}
+    nonmember: {hf: HuggingFaceFW/fineweb-2, config: fin_Latn, split: test,  text_field: text}
+  swahili:
+    member:    {hf: lelapa/Inkuba-Mono, config: swahili, split: train, text_field: text}
+    nonmember: {hf: HuggingFaceFW/fineweb-2, config: swh_Latn, split: test, text_field: text}
+  zulu:
+    member:    {hf: lelapa/Inkuba-Mono, config: zulu, split: train, text_field: text}
+    nonmember: {hf: HuggingFaceFW/fineweb-2, config: zul_Latn, split: test, text_field: text}
+  english:
+    member:    {hf: allenai/c4, config: en, split: train, text_field: text}
+    nonmember: {hf: allenai/c4, config: en, split: validation, text_field: text}
+  # controls used in v1 (keep for the flat-baseline figure)
+  polish:
+    member:    {hf: HuggingFaceFW/fineweb-2, config: pol_Latn, split: train, text_field: text}
+    nonmember: {hf: HuggingFaceFW/fineweb-2, config: pol_Latn, split: test, text_field: text}
