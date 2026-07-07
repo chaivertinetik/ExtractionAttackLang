@@ -108,4 +108,7 @@ All raw per-sample CSVs land in `results/`; summary tables in `tables/`.
 | `run_novel_memorization.py` | fertility-normalized + n-gram floor | no |
 | `run_canary.py` | causal canary injection | **yes** (410M) |
 | `run_vocab_intervention.py` | fertility intervention capstone | **yes** (2×410M) |
+| `run_fertility_sweep.py` | duplication×fertility unified surface | **yes** (N×410M) |
+| `run_crosslingual_leakage.py` | secret leaks A→B across languages | **yes** (410M) |
+| `run_checkpoint_dynamics.py` | memorization onset across checkpoints | no (reuses Pythia revisions) |
 | `aggregate.py` | build CI tables + LaTeX | no |

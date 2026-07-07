@@ -62,8 +62,34 @@ for lang_cfg in "swahili swh_Latn" "zulu zul_Latn"; do
     --add_tokens 5000 --reps 1 2 4 8 16 32 64 --out $OUT/vocab_$1
 done
 
+# ---- 7. GRAND-UNIFIED surface: duplication x fertility (headline figure) ----
+# Trains one small model per fertility level (default 4). Run on the anchor
+# low-resource language. Subsumes steps 4 (canary) and 6 (vocab A/B).
+python run_fertility_sweep.py --base_model EleutherAI/pythia-410m \
+  --corpus_hf HuggingFaceFW/fineweb-2 --corpus_config swh_Latn --lang swahili \
+  --add_tokens_sweep 0 1000 5000 20000 --reps 1 2 4 8 16 32 64 128 \
+  --out $OUT/surface_swahili
+
+# ---- 8. CROSS-LINGUAL LEAKAGE: secret injected in lang A, probed in lang B ----
+# Trains one small model; privacy result. Corpus lang is just the carrier text.
+python run_crosslingual_leakage.py --base_model EleutherAI/pythia-410m \
+  --corpus_hf HuggingFaceFW/fineweb-2 --corpus_config swh_Latn \
+  --langs english finnish swahili zulu --reps 4 16 64 --out $OUT/leak
+
+# ---- 9. MEMORIZATION ONSET across checkpoints (open-data Pythia) ----
+# Inference-only; reuses Pythia's 154 released checkpoints. One --lang per run;
+# overlay the CSVs to compare onset across languages.
+for lang in english finnish swahili; do
+  python run_checkpoint_dynamics.py --model EleutherAI/pythia-1.4b --lang $lang \
+    --n 1000 --revisions step1000 step4000 step16000 step36000 step64000 step100000 step143000 \
+    --out $OUT/dynamics
+done
+
 # ---- aggregate ----
 python aggregate.py --glob "$OUT/extraction_*.csv" --out tables
 python aggregate.py --mia $OUT/mia_summary.csv
-echo "novel decomposition -> $OUT/novel_summary.csv"
+echo "novel decomposition    -> $OUT/novel_summary.csv"
 echo "fertility intervention -> $OUT/vocab_*/vocab_intervention.csv"
+echo "unified surface        -> $OUT/surface_swahili/surface.csv"
+echo "cross-lingual leakage  -> $OUT/leak/leakage.csv"
+echo "memorization onset     -> $OUT/dynamics/dynamics_*.csv"

@@ -74,8 +74,8 @@ def main():
         w.writeheader(); w.writerows(members + nonmembers)
 
     # fertility (mechanism variable) + per-metric AUC / TPR@1%FPR
-    fert = tokenizer_fertility(tok, [m["doc_id"] for m in []] or
-                               [p.prefix_text for p in make_pairs(tok, lang_cfg["member"], 200, 1)])
+    fert = tokenizer_fertility(
+        tok, [p.prefix_text for p in make_pairs(tok, lang_cfg["member"], 200, 1)])
     summary = {"model": tag, "lang": args.lang, "fertility": round(fert, 3)}
     for metric in ["neg_loss", "zlib_ratio", "min_k", "min_k_pp"]:
         mv = [r[metric] for r in members]

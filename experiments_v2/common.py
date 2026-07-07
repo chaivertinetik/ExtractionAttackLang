@@ -30,19 +30,24 @@ def set_seed(seed: int) -> None:
         torch.cuda.manual_seed_all(seed)
 
 
-def load_model(name: str, dtype: str = "bfloat16", quantize: bool = False):
+def load_model(name: str, dtype: str = "bfloat16", quantize: bool = False,
+               revision: str | None = None):
     """Load a causal LM + tokenizer.
 
     Prefer full/half precision. Quantization is a *confound* for a
     memorization study (it is itself a defense studied in the paper), so it is
     off by default and, when used, must be reported as a separate condition.
+
+    `revision` selects a specific checkpoint (e.g. Pythia's ``step103000`` or an
+    OLMo intermediate). Used by run_checkpoint_dynamics.py to trace when
+    per-language memorization emerges during training.
     """
-    tok = AutoTokenizer.from_pretrained(name, trust_remote_code=True)
+    tok = AutoTokenizer.from_pretrained(name, trust_remote_code=True, revision=revision)
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
     tok.padding_side = "left"  # required for correct batched generation
 
-    kwargs = dict(trust_remote_code=True, device_map="auto")
+    kwargs = dict(trust_remote_code=True, device_map="auto", revision=revision)
     if quantize:
         from transformers import BitsAndBytesConfig
         kwargs["quantization_config"] = BitsAndBytesConfig(

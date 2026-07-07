@@ -26,20 +26,37 @@ model_families:
   olmo_suite:
     sizes: [allenai/OLMo-2-0425-1B, allenai/OLMo-2-1124-7B]
 
+# ===========================================================================
+# MIA VALIDITY WARNING (read before running run_mia.py)
+# member and nonmember MUST come from the SAME distribution and differ ONLY in
+# whether the model saw them. If member=corpusA and nonmember=corpusB, the AUC
+# measures "can the model tell corpus A from corpus B" (distribution shift),
+# NOT membership -- this is exactly why most LLM-MIA results fail to replicate
+# (Duan et al. 2024). Two valid ways to build a non-member:
+#   (a) same corpus, TEMPORAL holdout: docs crawled AFTER the model's cutoff.
+#   (b) OPEN-DATA models (Pythia->Pile, OLMo->Dolma): use a provably held-out
+#       shard of the SAME corpus. STRONGLY PREFERRED -- membership is known.
+# The Poro/Inkuba MIA numbers are only trustworthy if you can construct a true
+# same-distribution non-member; otherwise report MIA only on Pythia/OLMo and
+# use the specialist-vs-base EXTRACTION arm (which needs no non-member set) for
+# Poro/Inkuba. Entries below marked SHIFT-RISK are cross-corpus -> do not trust.
+# ===========================================================================
 languages:
+  # --- open-data models: clean same-corpus temporal/random holdout (PREFERRED) ---
   finnish:
     member:    {hf: HuggingFaceFW/fineweb-2, config: fin_Latn, split: train, text_field: text}
-    nonmember: {hf: HuggingFaceFW/fineweb-2, config: fin_Latn, split: test,  text_field: text}
-  swahili:
-    member:    {hf: lelapa/Inkuba-Mono, config: swahili, split: train, text_field: text}
-    nonmember: {hf: HuggingFaceFW/fineweb-2, config: swh_Latn, split: test, text_field: text}
-  zulu:
-    member:    {hf: lelapa/Inkuba-Mono, config: zulu, split: train, text_field: text}
-    nonmember: {hf: HuggingFaceFW/fineweb-2, config: zul_Latn, split: test, text_field: text}
+    nonmember: {hf: HuggingFaceFW/fineweb-2, config: fin_Latn, split: test,  text_field: text}  # same corpus, held-out
   english:
     member:    {hf: allenai/c4, config: en, split: train, text_field: text}
-    nonmember: {hf: allenai/c4, config: en, split: validation, text_field: text}
-  # controls used in v1 (keep for the flat-baseline figure)
+    nonmember: {hf: allenai/c4, config: en, split: validation, text_field: text}                 # same corpus, held-out
   polish:
     member:    {hf: HuggingFaceFW/fineweb-2, config: pol_Latn, split: train, text_field: text}
     nonmember: {hf: HuggingFaceFW/fineweb-2, config: pol_Latn, split: test, text_field: text}
+  # --- SHIFT-RISK: cross-corpus member/nonmember. Only for the EXTRACTION arm,
+  #     NOT for MIA AUC, until a same-distribution non-member is available. ---
+  swahili:
+    member:    {hf: lelapa/Inkuba-Mono, config: swahili, split: train, text_field: text}
+    nonmember: {hf: HuggingFaceFW/fineweb-2, config: swh_Latn, split: test, text_field: text}     # SHIFT-RISK
+  zulu:
+    member:    {hf: lelapa/Inkuba-Mono, config: zulu, split: train, text_field: text}
+    nonmember: {hf: HuggingFaceFW/fineweb-2, config: zul_Latn, split: test, text_field: text}      # SHIFT-RISK
